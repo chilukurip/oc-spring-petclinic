@@ -1,0 +1,23 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  creationTimestamp: null
+  labels:
+    app: bogije-spring-petclinic
+    chart: bogije-spring-petclinic
+    heritage: Tiller
+    release: bogije-spring-petclinic
+  name: bogije-spring-petclinic
+  namespace: __PROJECT__
+spec:
+  host: bogije-spring-petclinic-__PROJECT__.apps.muthu8.perspectadojodevops.com
+  port:
+    targetPort: http
+  subdomain: ""
+  to:
+    kind: Service
+    name: bogije-spring-petclinic
+    weight: 100
+  wildcardPolicy: None
+status:
+  ingress: null
