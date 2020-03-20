@@ -1,0 +1,125 @@
+---
+apiVersion: v1
+items:
+kind: List
+metadata: {}
+items:
+- apiVersion: apps.openshift.io/v1
+  kind: DeploymentConfig
+  metadata:
+    labels:
+      app: bogije-spring-petclinic
+      chart: bogije-spring-petclinic-0.0.1
+      heritage: Tiller
+      release: bogije-spring-petclinic
+    name: bogije-spring-petclinic
+    namespace: __PROJECT__
+  spec:
+    replicas: 1
+    selector:
+      deploymentconfig: bogije-spring-petclinic
+    template:
+      metadata:
+        labels:
+          app: bogije-spring-petclinic
+          release: bogije-spring-petclinic
+          deploymentconfig: bogije-spring-petclinic
+          version: v1
+      spec:
+        imagePullSecrets:
+        - name: docker-registry-credentials
+        containers:
+          - name: bogije-spring-petclinic
+            image: "__IMAGE_TAG__"
+            imagePullPolicy: "Always"
+            ports:
+              - name: http
+                containerPort: 8080
+                protocol: TCP
+            livenessProbe:
+              tcpSocket:
+                port: http
+              initialDelaySeconds: 600
+              timeoutSeconds: 60
+            readinessProbe:
+              tcpSocket:
+                port: http
+            resources:
+              {}
+
+- apiVersion: v1
+  kind: Service
+  metadata:
+    labels:
+      app: bogije-spring-petclinic
+      chart: bogije-spring-petclinic-0.0.1
+      heritage: Tiller
+      release: bogije-spring-petclinic
+      version: v1
+    name: bogije-spring-petclinic
+    namespace: __PROJECT__
+  spec:
+    type: "ClusterIP"
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+        targetPort: 8080
+    selector:
+      app: bogije-spring-petclinic
+      release: bogije-spring-petclinic
+
+- apiVersion: extensions/v1beta1
+  kind: Ingress
+  metadata:
+    annotations:
+      haproxy.router.openshift.io/timeout: 11m
+    labels:
+      app: __PROJECT__-bogije-spring-petclinic
+    name: __PROJECT__-bogije-spring-petclinic
+    namespace: istio-system
+  spec:
+    tls:
+    - hosts:
+      - "bogije-spring-petclinic.__PROJECT__.vaughn.perspectatechdemos.com"
+      secretName: "vaughn-perspectatechdemos-com-crt"
+    rules:
+    - host: bogije-spring-petclinic.__PROJECT__.vaughn.perspectatechdemos.com
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: istio-ingressgateway
+            servicePort: 80
+
+- apiVersion: networking.istio.io/v1alpha3
+  kind: VirtualService
+  metadata:
+    name: bogije-spring-petclinic
+    namespace: __PROJECT__
+  spec:
+    hosts:
+    - "bogije-spring-petclinic.__PROJECT__.vaughn.perspectatechdemos.com"
+    gateways:
+    - __PROJECT__-istio-gateway
+    http:
+    - match:
+      - uri:
+          prefix: /
+      route:
+      - destination:
+          host: bogije-spring-petclinic
+          port:
+            number: 80
+
+- apiVersion: networking.istio.io/v1alpha3
+  kind: DestinationRule
+  metadata:
+    name: bogije-spring-petclinic
+    namespace: __PROJECT__
+  spec:
+    host: bogije-spring-petclinic
+    subsets:
+    - name: v1
+      labels:
+        version: v1            
