@@ -89,10 +89,13 @@ spec:
     DEVCLOUD_DOCKER_TAG = "${DEVCLOUD_REGISTRY_ADDRESS}/${GITHUB_PROJECT}:${APPLICATION_MAJOR_VERSION}.${APPLICATION_MINOR_VERSION}.${env.BUILD_NUMBER}"
     DEVCLOUD_BRANCH_TAG = "master"
     MATTERMOST_CHANNEL = "bogije-spring-petclinic"
-    MATTERMOST_WEBHOOK = "https://mattermost-mgt-muthu8.perspectadojodevops.com/hooks/i4778gg39frhufuonf5ecz8h3y"
+    MATTERMOST_WEBHOOK = "https://mattermost-mgt-muthu8.perspectadojodevops.com/hooks/93ek8bcgpibyzgb8hmbr93rnjh"
     ARTIFACTORY_URL = "https://artifactory-mgt-muthu8.perspectadojodevops.com"
     SONARQUBE_URL = "https://sonarqube-mgt-muthu8.perspectadojodevops.com"
     GITHUB_URL = "https://github.com"
+    // we set this for now as there is some weirdness related to BUILD_URL env variable
+    // definitely not best practice
+    BUILD_URL = "https://jenkins-mgt-muthu8.perspectadojodevops.com/job/bogije/job/spring-petclinic/job/${BRANCH_NAME}/${BUILD_NUMBER}"
     DEV_DEPLOYMENT_URL = "http://bogije-spring-petclinic-dev.apps.muthu8.perspectadojodevops.com"
     TEST_DEPLOYMENT_URL = "http://bogije-spring-petclinic-test.apps.muthu8.perspectadojodevops.com"
     PROD_DEPLOYMENT_URL = "http://bogije-spring-petclinic-prod.apps.muthu8.perspectadojodevops.com"
