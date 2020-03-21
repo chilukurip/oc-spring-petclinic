@@ -83,22 +83,23 @@ spec:
     MANAGEMENT_NAMESPACE = "mgt"
     GITHUB_GROUP = "bogije"
     GITHUB_PROJECT = "spring-petclinic"
-    DEVCLOUD_REGISTRY_ADDRESS = "docker-nexus-mgt-muthu9.perspectadojodevops.com"
+    GITHUB_PROJECT_URL = "https://github.com/bogije/spring-petclinic"
+    SONARQUBE_TOKEN = "7cbe32096b88388361f620118713f2f94ba7eeab"
+    DEVCLOUD_REGISTRY_ADDRESS = "docker-nexus.mgt.vaughn.perspectatechdemos.com"
+    QUAY_REGISTRY_ADDRESS = "quay-quay-enterprise.apps.vaughn.perspectatechdemos.com"
     APPLICATION_MAJOR_VERSION = "1"
     APPLICATION_MINOR_VERSION = "0"
     DEVCLOUD_DOCKER_TAG = "${DEVCLOUD_REGISTRY_ADDRESS}/${GITHUB_PROJECT}:${APPLICATION_MAJOR_VERSION}.${APPLICATION_MINOR_VERSION}.${env.BUILD_NUMBER}"
     DEVCLOUD_BRANCH_TAG = "master"
     MATTERMOST_CHANNEL = "bogije-spring-petclinic"
-    MATTERMOST_WEBHOOK = "https://mattermost-mgt-muthu9.perspectadojodevops.com/hooks/ngiztm8tjirxjnnukqduc69pzw"
-    ARTIFACTORY_URL = "https://artifactory-mgt-muthu9.perspectadojodevops.com"
-    SONARQUBE_URL = "https://sonarqube-mgt-muthu9.perspectadojodevops.com"
-    GITHUB_URL = "https://github.com"
-    // we set this for now as there is some weirdness related to BUILD_URL env variable
-    // definitely not best practice
-    BUILD_URL = "https://jenkins-mgt-muthu9.perspectadojodevops.com/job/bogije/job/spring-petclinic/job/${BRANCH_NAME}/${BUILD_NUMBER}"
-    DEV_DEPLOYMENT_URL = "http://bogije-spring-petclinic-dev.apps.muthu9.perspectadojodevops.com"
-    TEST_DEPLOYMENT_URL = "http://bogije-spring-petclinic-test.apps.muthu9.perspectadojodevops.com"
-    PROD_DEPLOYMENT_URL = "http://bogije-spring-petclinic-prod.apps.muthu9.perspectadojodevops.com"
+    MATTERMOST_WEBHOOK = "https://mattermost.mgt.vaughn.perspectatechdemos.com/hooks/t3r6kj4xntfcmbtat59buiy7th"
+    ARTIFACTORY_URL = "https://artifactory.mgt.vaughn.perspectatechdemos.com"
+    NEXUS_ARTIFACT_URL = "https://nexus.mgt.vaughn.perspectatechdemos.com/#browse/search/docker"
+    SONARQUBE_URL = "https://sonarqube.mgt.vaughn.perspectatechdemos.com"
+    DEV_DEPLOYMENT_URL = "https://bogije-spring-petclinic.dev.vaughn.perspectatechdemos.com"
+    TEST_DEPLOYMENT_URL = "https://bogije-spring-petclinic.test.vaughn.perspectatechdemos.com"
+    PROD_DEPLOYMENT_URL = "https://bogije-spring-petclinic.prod.vaughn.perspectatechdemos.com"
+    REPOSITORY_SOURCE_FOLDER = "."
   }
 
   // triggers { pollSCM '* * * * *' }
@@ -112,14 +113,14 @@ spec:
       steps {
         updateGitlabCommitStatus name: 'build', state: 'pending'
         container('maven') {
-          sh 'pwd;ls -al'
-	  checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bogije-token', url: "${GITHUB_URL}/${GITHUB_GROUP}/${GITHUB_PROJECT}.git"]]] 
+          sh 'env; pwd;ls -al'
+	  checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bogije-token', url: "${GITHUB_PROJECT_URL}.git"]]] 
           dir('.') {
             sh 'ls -al'
             sh 'mvn compile'
           }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}"
       }
     }
     stage('Test') {
@@ -130,7 +131,7 @@ spec:
             sh 'mvn test'
           }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}"
       }
     }
     stage('SAST') {
@@ -138,11 +139,15 @@ spec:
         container('maven') {
           dir('.') {
             withSonarQubeEnv('sonarqube') { 
-            sh "mvn compile && mvn sonar:sonar -Dsonar.projectKey=${GITHUB_GROUP}-${GITHUB_PROJECT}"
+            sh "mvn compile && mvn sonar:sonar \
+            -Dsonar.projectKey=${GITHUB_GROUP}-${GITHUB_PROJECT} \
+            -Dsonar.host.url=${SONARQUBE_URL} \
+            -Dsonar.scm.provider=git \
+            -Dsonar.login=${SONARQUBE_TOKEN}"
             }
           }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nStatic Application Security Test: ${SONARQUBE_URL}/dashboard?id=${GITHUB_GROUP}-${GITHUB_PROJECT}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nStatic Application Security Test: ${SONARQUBE_URL}/dashboard?id=${GITHUB_GROUP}-${GITHUB_PROJECT}"
       }
     }
     stage('SAST Quality Gate') {
@@ -152,7 +157,7 @@ spec:
               waitForQualityGate abortPipeline: true
             }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nQuality Gate: ${SONARQUBE_URL}/dashboard?id=${GITHUB_GROUP}-${GITHUB_PROJECT}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nQuality Gate: ${SONARQUBE_URL}/dashboard?id=${GITHUB_GROUP}-${GITHUB_PROJECT}"
       }
     }    
     stage('Package') {
@@ -166,27 +171,23 @@ spec:
             }
           }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nArtifact: ${ARTIFACTORY_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nArtifact: ${NEXUS_ARTIFACT_URL}"
       }
     }
     stage('Deploy Dev') {
       steps {
         container('ubuntu') {
             sh "apt update -y && apt-get install wget git -y"
-            checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bogije-token', url: "${GITHUB_URL}/${GITHUB_GROUP}/${GITHUB_PROJECT}.git"]]]
-            sh "cd /usr/local/bin && wget https://redcloud3.s3.amazonaws.com/tools/oc-4.2.9-linux.tar.gz && tar -xvf oc-4.2.9-linux.tar.gz"
+            checkout changelog: false, poll: false, scm: [$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: 'bogije-token', url: "${GITHUB_PROJECT_URL}.git"]]]
+            sh "cd /usr/local/bin && wget https://redcloud3.s3.amazonaws.com/tools/oc-4.3.2-linux.tar.gz && tar -xvf oc-4.3.2-linux.tar.gz"
           dir('.') {
-            sh "sed 's#__PROJECT__#dev#g' route.yaml > route-dev.yaml"
-            sh "sed 's#__PROJECT__#dev#g' service.yaml > service-dev.yaml"
-            sh "sed 's#__PROJECT__#dev#g' deployment.yaml > deployment-dev.yaml"
-            sh "sed -i 's#__IMAGE_TAG__#${DEVCLOUD_DOCKER_TAG}#' deployment-dev.yaml"
-            sh "cat deployment-dev.yaml"
-            sh "oc apply -f deployment-dev.yaml"
-            sh "oc apply -f service-dev.yaml"
-            sh "oc apply -f route-dev.yaml || true"
+            sh "sed 's#__PROJECT__#dev#g' springboot.yaml > springboot-dev.yaml"
+            sh "sed -i 's#__IMAGE_TAG__#${DEVCLOUD_DOCKER_TAG}#' springboot-dev.yaml"
+            sh "cat springboot-dev.yaml"
+            sh "oc apply -f springboot-dev.yaml"
           }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nDevelopment URL: ${DEV_DEPLOYMENT_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nDevelopment URL: ${DEV_DEPLOYMENT_URL}"
       }
     }
     stage('Validate Dev') {
@@ -194,40 +195,41 @@ spec:
         container('maven') {
           sh "echo 'selenium script validation'"
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nDevelopment URL: ${DEV_DEPLOYMENT_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nDevelopment URL: ${DEV_DEPLOYMENT_URL}"
       }
     }
     stage('ZAP Scan Dev') {
       steps {
         container('zap') {
-          sh "/zap/zap.sh -quickurl ${DEV_DEPLOYMENT_URL} -cmd -quickprogress -quickout \${WORKSPACE}/zap_scan_dev.xml"
-          // archiveArtifacts(artifacts: 'zap_scan_dev.xml')
+          sh "/zap/zap.sh -quickurl ${DEV_DEPLOYMENT_URL} -cmd -quickprogress -quickout \${WORKSPACE}/\${REPOSITORY_SOURCE_FOLDER}/zap_scan_dev.xml"
         }
         container('python') {
           sh "echo 'this is the python container'"
           sh "pwd"
-          sh "ls -al \${WORKSPACE}"
-          sh "ls -al \${WORKSPACE}/zap_scan_dev.xml"
+          sh "pip install lxml"
+          sh "ls -al \${WORKSPACE}/\${REPOSITORY_SOURCE_FOLDER}"
+          sh "cd \${WORKSPACE}/\${REPOSITORY_SOURCE_FOLDER}; python zap_scan_dev.py"
+          sh "ls -al \${WORKSPACE}/"
+          sh "ls -al \${WORKSPACE}/\${REPOSITORY_SOURCE_FOLDER}"
+          sh "cp -f \${WORKSPACE}/\${REPOSITORY_SOURCE_FOLDER}/zap_scan_dev.xml \${WORKSPACE}/zap_scan_dev.xml || true"
+          sh "cp -f \${WORKSPACE}/\${REPOSITORY_SOURCE_FOLDER}/zap_scan_dev.html \${WORKSPACE}/zap_scan_dev.html || true"
           archiveArtifacts(artifacts: 'zap_scan_dev.xml')
+          archiveArtifacts(artifacts: 'zap_scan_dev.html')
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nZAP Scan Dev: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nDevelopment URL: ${DEV_DEPLOYMENT_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nZAP Scan Dev: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nDevelopment URL: ${DEV_DEPLOYMENT_URL}"
       }
     }    
     stage('Deploy Test') {
       steps {
         container('ubuntu') {
           dir('.') {
-            sh "sed 's#__PROJECT__#test#g' route.yaml > route-test.yaml"
-            sh "sed 's#__PROJECT__#test#g' service.yaml > service-test.yaml"
-            sh "sed 's#__PROJECT__#test#g' deployment.yaml > deployment-test.yaml"
-            sh "sed -i 's#__IMAGE_TAG__#${DEVCLOUD_DOCKER_TAG}#' deployment-test.yaml"
-            sh "cat deployment-test.yaml"
-            sh "oc apply -f deployment-test.yaml"
-            sh "oc apply -f service-test.yaml"
-            sh "oc apply -f route-test.yaml || true"
+            sh "sed 's#__PROJECT__#test#g' springboot.yaml > springboot-test.yaml"
+            sh "sed -i 's#__IMAGE_TAG__#${DEVCLOUD_DOCKER_TAG}#' springboot-test.yaml"
+            sh "cat springboot-test.yaml"
+            sh "oc apply -f springboot-test.yaml"
           }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nTest URL: ${TEST_DEPLOYMENT_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nTest URL: ${TEST_DEPLOYMENT_URL}"
       }
     }
     stage('Validate Test') {
@@ -235,24 +237,20 @@ spec:
         container('maven') {
           sh "echo 'selenium script validation'"
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nTest URL: ${TEST_DEPLOYMENT_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nTest URL: ${TEST_DEPLOYMENT_URL}"
       }
     }
     stage('Deploy Prod') {
       steps {
         container('ubuntu') {
           dir('.') {
-            sh "sed 's#__PROJECT__#prod#g' route.yaml > route-prod.yaml"
-            sh "sed 's#__PROJECT__#prod#g' service.yaml > service-prod.yaml"
-            sh "sed 's#__PROJECT__#prod#g' deployment.yaml > deployment-prod.yaml"
-            sh "sed -i 's#__IMAGE_TAG__#${DEVCLOUD_DOCKER_TAG}#' deployment-prod.yaml"
-            sh "cat deployment-prod.yaml"
-            sh "oc apply -f deployment-prod.yaml"
-            sh "oc apply -f service-prod.yaml"
-            sh "oc apply -f route-prod.yaml || true"
+            sh "sed 's#__PROJECT__#prod#g' springboot.yaml > springboot-prod.yaml"
+            sh "sed -i 's#__IMAGE_TAG__#${DEVCLOUD_DOCKER_TAG}#' springboot-prod.yaml"
+            sh "cat springboot-prod.yaml"
+            sh "oc apply -f springboot-prod.yaml"
           }
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nProduction URL: ${PROD_DEPLOYMENT_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nProduction URL: ${PROD_DEPLOYMENT_URL}"
       }
     }
     stage('Validate Prod') {
@@ -260,7 +258,7 @@ spec:
         container('maven') {
           sh "echo 'selenium script validation'"
         }
-        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}\nProduction URL: ${PROD_DEPLOYMENT_URL}"
+        mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "Job: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}\nProduction URL: ${PROD_DEPLOYMENT_URL}"
       }
     }       
 
@@ -268,13 +266,13 @@ spec:
 
   post {
     success {
-      mail body: "SUCCESS\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}", from: 'jenkins@localhost', replyTo: 'jenkins@localhost', subject: "Build ${GITHUB_PROJECT}", to: 'jenkins@localhost'
-      mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "SUCCESS\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}"
+      // mail body: "SUCCESS\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}", from: 'jenkins@localhost', replyTo: 'jenkins@localhost', subject: "Build ${GITHUB_PROJECT}", to: 'jenkins@localhost'
+      mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "SUCCESS\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}"
       updateGitlabCommitStatus name: 'build', state: 'success'
     }
     failure {
-      mail body: "SUCCESS\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}", from: 'jenkins@localhost', replyTo: 'jenkins@localhost', subject: "FAILURE Build ${GITHUB_PROJECT}", to: 'jenkins@localhost'
-      mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "FAILED\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_URL}"
+      // mail body: "SUCCESS\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}", from: 'jenkins@localhost', replyTo: 'jenkins@localhost', subject: "FAILURE Build ${GITHUB_PROJECT}", to: 'jenkins@localhost'
+      mattermostSend channel: "${MATTERMOST_CHANNEL}", endpoint: "${MATTERMOST_WEBHOOK}", message: "FAILED\nJob: ${JOB_NAME} \nStage: ${STAGE_NAME}\nBuild: ${BUILD_URL}\nCommit: ${GITHUB_PROJECT_URL}"
       updateGitlabCommitStatus name: 'build', state: 'failed'
     }
   }
