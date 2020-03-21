@@ -10,7 +10,7 @@ metadata:
   name: bogije-spring-petclinic
   namespace: __PROJECT__
 spec:
-  host: bogije-spring-petclinic-__PROJECT__.apps.muthu8.perspectadojodevops.com
+  host: bogije-spring-petclinic-__PROJECT__.apps.muthu9.perspectadojodevops.com
   port:
     targetPort: http
   subdomain: ""

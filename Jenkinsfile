@@ -83,22 +83,22 @@ spec:
     MANAGEMENT_NAMESPACE = "mgt"
     GITHUB_GROUP = "bogije"
     GITHUB_PROJECT = "spring-petclinic"
-    DEVCLOUD_REGISTRY_ADDRESS = "docker-nexus-mgt-muthu8.perspectadojodevops.com"
+    DEVCLOUD_REGISTRY_ADDRESS = "docker-nexus-mgt-muthu9.perspectadojodevops.com"
     APPLICATION_MAJOR_VERSION = "1"
     APPLICATION_MINOR_VERSION = "0"
     DEVCLOUD_DOCKER_TAG = "${DEVCLOUD_REGISTRY_ADDRESS}/${GITHUB_PROJECT}:${APPLICATION_MAJOR_VERSION}.${APPLICATION_MINOR_VERSION}.${env.BUILD_NUMBER}"
     DEVCLOUD_BRANCH_TAG = "master"
     MATTERMOST_CHANNEL = "bogije-spring-petclinic"
-    MATTERMOST_WEBHOOK = "https://mattermost-mgt-muthu8.perspectadojodevops.com/hooks/93ek8bcgpibyzgb8hmbr93rnjh"
-    ARTIFACTORY_URL = "https://artifactory-mgt-muthu8.perspectadojodevops.com"
-    SONARQUBE_URL = "https://sonarqube-mgt-muthu8.perspectadojodevops.com"
+    MATTERMOST_WEBHOOK = "https://mattermost-mgt-muthu9.perspectadojodevops.com/hooks/ngiztm8tjirxjnnukqduc69pzw"
+    ARTIFACTORY_URL = "https://artifactory-mgt-muthu9.perspectadojodevops.com"
+    SONARQUBE_URL = "https://sonarqube-mgt-muthu9.perspectadojodevops.com"
     GITHUB_URL = "https://github.com"
     // we set this for now as there is some weirdness related to BUILD_URL env variable
     // definitely not best practice
-    BUILD_URL = "https://jenkins-mgt-muthu8.perspectadojodevops.com/job/bogije/job/spring-petclinic/job/${BRANCH_NAME}/${BUILD_NUMBER}"
-    DEV_DEPLOYMENT_URL = "http://bogije-spring-petclinic-dev.apps.muthu8.perspectadojodevops.com"
-    TEST_DEPLOYMENT_URL = "http://bogije-spring-petclinic-test.apps.muthu8.perspectadojodevops.com"
-    PROD_DEPLOYMENT_URL = "http://bogije-spring-petclinic-prod.apps.muthu8.perspectadojodevops.com"
+    BUILD_URL = "https://jenkins-mgt-muthu9.perspectadojodevops.com/job/bogije/job/spring-petclinic/job/${BRANCH_NAME}/${BUILD_NUMBER}"
+    DEV_DEPLOYMENT_URL = "http://bogije-spring-petclinic-dev.apps.muthu9.perspectadojodevops.com"
+    TEST_DEPLOYMENT_URL = "http://bogije-spring-petclinic-test.apps.muthu9.perspectadojodevops.com"
+    PROD_DEPLOYMENT_URL = "http://bogije-spring-petclinic-prod.apps.muthu9.perspectadojodevops.com"
   }
 
   // triggers { pollSCM '* * * * *' }
