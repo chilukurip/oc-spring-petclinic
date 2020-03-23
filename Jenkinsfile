@@ -84,21 +84,21 @@ spec:
     GITHUB_GROUP = "bogije"
     GITHUB_PROJECT = "spring-petclinic"
     GITHUB_PROJECT_URL = "https://github.com/bogije/spring-petclinic"
-    SONARQUBE_TOKEN = "413cf4aeeb1bbc63a88bb640d458651b580bfd43"
-    DEVCLOUD_REGISTRY_ADDRESS = "docker-nexus.mgt.brown.perspectatechdemos.com"
-    QUAY_REGISTRY_ADDRESS = "quay-quay-enterprise.apps.brown.perspectatechdemos.com"
+    SONARQUBE_TOKEN = "580320dc7f23d3bb44662dcbdeb4c98845173ed7"
+    DEVCLOUD_REGISTRY_ADDRESS = "docker-nexus.mgt.green.perspectatechdemos.com"
+    QUAY_REGISTRY_ADDRESS = "quay-quay-enterprise.apps.green.perspectatechdemos.com"
     APPLICATION_MAJOR_VERSION = "1"
     APPLICATION_MINOR_VERSION = "0"
     DEVCLOUD_DOCKER_TAG = "${DEVCLOUD_REGISTRY_ADDRESS}/${GITHUB_PROJECT}:${APPLICATION_MAJOR_VERSION}.${APPLICATION_MINOR_VERSION}.${env.BUILD_NUMBER}"
     DEVCLOUD_BRANCH_TAG = "master"
     MATTERMOST_CHANNEL = "bogije-spring-petclinic"
-    MATTERMOST_WEBHOOK = "https://mattermost.mgt.brown.perspectatechdemos.com/hooks/w4ayjcmqsbr87xnatk534n58cr"
-    ARTIFACTORY_URL = "https://artifactory.mgt.brown.perspectatechdemos.com"
-    NEXUS_ARTIFACT_URL = "https://nexus.mgt.brown.perspectatechdemos.com/#browse/search/docker"
-    SONARQUBE_URL = "https://sonarqube.mgt.brown.perspectatechdemos.com"
-    DEV_DEPLOYMENT_URL = "https://bogije-spring-petclinic.dev.brown.perspectatechdemos.com"
-    TEST_DEPLOYMENT_URL = "https://bogije-spring-petclinic.test.brown.perspectatechdemos.com"
-    PROD_DEPLOYMENT_URL = "https://bogije-spring-petclinic.prod.brown.perspectatechdemos.com"
+    MATTERMOST_WEBHOOK = "https://mattermost.mgt.green.perspectatechdemos.com/hooks/qwojat994if4infd17hbihbghh"
+    ARTIFACTORY_URL = "https://artifactory.mgt.green.perspectatechdemos.com"
+    NEXUS_ARTIFACT_URL = "https://nexus.mgt.green.perspectatechdemos.com/#browse/search/docker"
+    SONARQUBE_URL = "https://sonarqube.mgt.green.perspectatechdemos.com"
+    DEV_DEPLOYMENT_URL = "https://bogije-spring-petclinic.dev.green.perspectatechdemos.com"
+    TEST_DEPLOYMENT_URL = "https://bogije-spring-petclinic.test.green.perspectatechdemos.com"
+    PROD_DEPLOYMENT_URL = "https://bogije-spring-petclinic.prod.green.perspectatechdemos.com"
     REPOSITORY_SOURCE_FOLDER = "."
   }
 
@@ -165,9 +165,19 @@ spec:
         container(name: 'kaniko', shell: '/busybox/sh') {
           dir('.') {
             withEnv(['PATH+EXTRA=/busybox']) {
-              sh '''#!/busybox/sh
-              /kaniko/executor --whitelist-var-run --context `pwd` --destination ${DEVCLOUD_DOCKER_TAG}
-              '''
+
+              try {
+                sh '''#!/busybox/sh
+                /kaniko/executor --whitelist-var-run --context `pwd` --destination ${DEVCLOUD_DOCKER_TAG}
+                '''
+              } catch(error) {
+                echo "Retry Package Image"
+                retry(2) {
+                  sh '''#!/busybox/sh
+                  /kaniko/executor --whitelist-var-run --context `pwd` --destination ${DEVCLOUD_DOCKER_TAG}
+                  '''
+              }
+
             }
           }
         }
