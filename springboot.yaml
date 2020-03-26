@@ -81,10 +81,10 @@ items:
   spec:
     tls:
     - hosts:
-      - "bogije-spring-petclinic.__PROJECT__.brown.perspectatechdemos.com"
-      secretName: "brown-perspectatechdemos-com-crt"
+      - "bogije-spring-petclinic.__PROJECT__.green.perspectatechdemos.com"
+      secretName: "green-perspectatechdemos-com-crt"
     rules:
-    - host: bogije-spring-petclinic.__PROJECT__.brown.perspectatechdemos.com
+    - host: bogije-spring-petclinic.__PROJECT__.green.perspectatechdemos.com
       http:
         paths:
         - path: /
@@ -99,7 +99,7 @@ items:
     namespace: __PROJECT__
   spec:
     hosts:
-    - "bogije-spring-petclinic.__PROJECT__.brown.perspectatechdemos.com"
+    - "bogije-spring-petclinic.__PROJECT__.green.perspectatechdemos.com"
     gateways:
     - __PROJECT__-istio-gateway
     http:
