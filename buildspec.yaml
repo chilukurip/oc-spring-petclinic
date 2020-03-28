@@ -14,8 +14,7 @@ phases:
     commands:
     - echo Build started on `date`
     - echo $IMAGE_URI
-    - mvn clean package --projects exchange-service-h2 "-Ddockerfile.skip"
-    - cd exchange-service-h2
+    - mvn clean compile
     - docker build --tag $IMAGE_URI .
     - cd ..
   post_build:
