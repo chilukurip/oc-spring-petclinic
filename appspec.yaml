@@ -1,0 +1,10 @@
+version: 1.0
+Resources:
+  - TargetService:
+      Type: AWS::ECS::Service
+      Properties:
+        TaskDefinition: "arn:aws:ecs:us-east-1:577663024260:task-definition/ocstackexchangeServiceTaskDefE4482F78:1"
+        LoadBalancerInfo:
+          ContainerName: "exchange-h2"
+          ContainerPort: "8000"
+        PlatformVersion: "LATEST"
