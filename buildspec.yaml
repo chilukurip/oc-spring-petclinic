@@ -16,7 +16,6 @@ phases:
     - echo $IMAGE_URI
     - mvn clean compile
     - docker build --tag $IMAGE_URI .
-    - cd ..
   post_build:
     commands:
     - printenv
