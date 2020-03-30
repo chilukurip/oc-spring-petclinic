@@ -5,6 +5,6 @@ Resources:
       Properties:
         TaskDefinition: "arn:aws:ecs:us-east-1:577663024260:task-definition/ocstackexchangeServiceTaskDefE4482F78:1"
         LoadBalancerInfo:
-          ContainerName: "exchange-h2"
-          ContainerPort: "8000"
+          ContainerName: "oc-application"
+          ContainerPort: "8080"
         PlatformVersion: "LATEST"
